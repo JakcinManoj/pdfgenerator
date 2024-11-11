@@ -1,4 +1,3 @@
-// src/pdf.controller.ts
 import { Controller, Post, Get, Body, Param, Res, HttpException, HttpStatus } from '@nestjs/common';
 import { PdfService } from './pdf.service';
 import { Response } from 'express';
