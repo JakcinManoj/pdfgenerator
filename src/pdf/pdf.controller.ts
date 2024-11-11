@@ -1,29 +1,29 @@
-import { Controller, Post, Get, Body, Param, StreamableFile } from '@nestjs/common';
+// src/pdf.controller.ts
+import { Controller, Post, Get, Body, Param, Res, HttpException, HttpStatus } from '@nestjs/common';
 import { PdfService } from './pdf.service';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Response } from 'express';
 
-@ApiTags('pdf')
 @Controller('pdf')
 export class PdfController {
   constructor(private readonly pdfService: PdfService) {}
 
   @Post()
-  @ApiCreatedResponse()
-  @ApiOperation({ summary: 'Create a PDF' })
-  async createPdf(@Body('htmlContent') htmlContent: string): Promise<{ id: number }> {
+  async createPdf(@Body('htmlContent') htmlContent: string): Promise<{ id: string }> {
     const id = await this.pdfService.createPdf(htmlContent);
     return { id };
   }
 
   @Get(':id')
-  @ApiOkResponse()
-  @ApiNotFoundResponse()
-  @ApiOperation({ summary: 'Get a PDF' })
-  async getPdf(@Param('id') id: number): Promise<StreamableFile> {
-    const pdfData = await this.pdfService.getPdf(id);
-    return new StreamableFile(pdfData, {
-      disposition: `attachment; filename="document-${id}.pdf"`,
-      type: 'application/pdf',
-    });
+  async getPdf(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const pdfData = await this.pdfService.getPdf(id);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="document-${id}.pdf"`,
+      });
+      res.send(pdfData);
+    } catch (error) {
+      throw new HttpException('PDF not found', HttpStatus.NOT_FOUND);
+    }
   }
 }
